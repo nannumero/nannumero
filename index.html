@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nan Numero">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Nan Numero</title>
+<meta name="theme-color" content="#1a1220">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: jedna kolona kao aplikacija; gornja traka sa nazivom, donja navigacija sa 3 ekrana; karta osobe u karticama sa skok-trakom */
+:root{
+  color-scheme: dark;
+  --bg:#17101c;        /* duboka šljiva */
+  --panel:#211828;     /* kartice */
+  --panel-2:#2b2033;   /* polja, ćelije */
+  --line:#3a2c45;
+  --ink:#f1e9f3;       /* tekst */
+  --muted:#a998b3;
+  --gold:#d9b25f;      /* zlato – akcenat */
+  --gold-soft:#d9b25f22;
+  --violet:#9b7bd4;    /* ljubičasta – sekundarna */
+  --violet-soft:#9b7bd425;
+  --good:#7fcf9a; --bad:#e58a8a;
+  --f-display: "Marcellus", "Cormorant Garamond", Georgia, serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 14px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg);min-height:100%}
+body{min-height:100vh}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.app{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding-block:14px 10px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--f-display);font-size:24px;letter-spacing:.06em;color:var(--gold);display:flex;align-items:center;gap:10px}
+.brand svg{width:26px;height:26px}
+.top .who{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+
+h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0;text-wrap:balance;letter-spacing:.02em}
+h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px}
+.stack{display:grid;gap:14px;padding-top:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:360px){.grid3{grid-template-columns:1fr 1fr}}
+
+label{display:grid;gap:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+input,select{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;text-transform:none;letter-spacing:0}
+input:focus,select:focus{border-color:var(--gold);outline:none}
+.btn{border:0;border-radius:12px;padding:13px 16px;font-weight:700;cursor:pointer;background:var(--gold);color:#1a1220;letter-spacing:.02em}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn.sm{padding:8px 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{color:var(--bad);font-size:14px}
+
+/* lista osoba */
+.person{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--panel-2);border:1px solid transparent;cursor:pointer;text-align:left;width:100%}
+.person:hover{border-color:var(--line)}
+.person .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--violet-soft);color:var(--violet);font-family:var(--f-display);font-size:18px;flex-shrink:0}
+.person .meta{min-width:0;flex:1}
+.person .meta b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .code{font-family:var(--f-display);font-size:20px;color:var(--gold);letter-spacing:.08em}
+.tag{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--violet-soft);color:var(--violet)}
+
+/* skok-traka sekcija */
+.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 57px);z-index:4;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex-shrink:0;text-decoration:none;color:var(--muted);font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid var(--line)}
+.jump a:hover{color:var(--ink);border-color:var(--gold)}
+
+/* hero – kodovi */
+.hero{display:grid;gap:14px;padding:20px 16px;border-radius:var(--r);background:radial-gradient(120% 90% at 50% 0%, #3a2648 0%, var(--panel) 60%);border:1px solid var(--line);text-align:center}
+.hero .name{font-family:var(--f-display);font-size:26px;line-height:1.15;text-wrap:balance}
+.hero .sub{color:var(--muted);font-size:14px}
+.codes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.code-box{background:#00000030;border:1px solid var(--line);border-radius:12px;padding:10px 4px;display:grid;gap:2px}
+.code-box b{font-family:var(--f-display);font-weight:400;font-size:28px;letter-spacing:.12em;color:var(--gold);font-variant-numeric:tabular-nums}
+.code-box span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.code-box.uni b{color:var(--ink)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.trio div{display:grid;gap:2px}
+.trio b{font-size:30px;font-family:var(--f-display);font-weight:400;color:var(--ink)}
+.trio span{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.trio i{font-style:normal;font-size:12px;color:var(--violet)}
+
+/* piramida */
+.pyr{display:grid;gap:4px;overflow-x:auto;padding-bottom:4px}
+.prow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.prow .cells{display:flex;gap:4px;justify-content:center}
+.prow .lab{font-size:11px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+.prow .lab.r{text-align:left}
+.prow .lab.l{text-align:right}
+.cell{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:600;font-variant-numeric:tabular-nums;background:var(--panel-2);border:1px solid var(--line);font-size:15px}
+.cell.top{background:transparent;border:0;color:var(--muted);height:22px;font-size:13px;font-weight:500}
+.cell.hot{background:var(--gold);color:#1a1220;border-color:var(--gold)}
+.cell.code{border-color:var(--gold);color:var(--gold)}
+.p1 .cell:not(.hot){background:#2d2238}.p2 .cell:not(.hot){background:#30233a}.p3 .cell:not(.hot){background:#33243c}.p4 .cell:not(.hot){background:#35253f}.p5 .cell:not(.hot){background:#382642}
+@media (max-width:400px){.cell{width:26px;height:28px;font-size:14px;border-radius:7px}.prow .lab{font-size:10px}}
+.kp .cell{width:24px;height:26px;font-size:13px;border-radius:6px}
+@media (max-width:400px){.kp .cell{width:20px;height:24px;font-size:12px}}
+
+/* parovi / aspekti */
+.pairs{display:grid;gap:8px}
+.pair{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--panel-2)}
+.pair .t{font-size:13px;color:var(--muted);min-width:0}
+.pair .v{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.glyph{font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Apple Symbols",serif;font-size:18px;line-height:1}
+.g-konj{color:var(--gold)}.g-opoz{color:var(--bad)}.g-seks{color:var(--violet)}.g-trig{color:var(--good)}.g-kvad{color:#e0a56a}.g-inko{color:#8fb8e8}
+.asp-head{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.asp-head .note{font-size:12px;color:var(--muted)}
+.pair.sep{grid-template-columns:1fr}
+.sepv{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:16px}
+.sepv>span{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:#00000030}
+
+/* stepeni */
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.step{padding:12px;border-radius:10px;background:var(--panel-2);display:grid;gap:2px}
+.step span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.step b{font-size:17px}
+.step .chain span{font-size:inherit;letter-spacing:inherit;text-transform:none;color:inherit}
+.step .chain .m{color:var(--violet)}
+.step.na b{color:var(--muted);font-weight:500;font-size:14px}
+.daynight{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border-radius:10px;background:var(--gold-soft);border:1px solid #d9b25f55}
+.daynight b{color:var(--gold);letter-spacing:.08em}
+
+/* kaldeja */
+.letters{display:flex;flex-wrap:wrap;gap:4px}
+.lt{display:grid;justify-items:center;gap:2px;min-width:22px;padding:3px 3px;border-radius:6px;background:var(--panel-2);font-size:12px;color:var(--ink);line-height:1.1}
+.lt b{font-size:11px;color:var(--gold)}
+.lt.gap{background:transparent;min-width:8px}
+.chain{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--f-display);font-size:30px;color:var(--gold);font-variant-numeric:tabular-nums}
+.chain i{font-style:normal;color:var(--muted);font-size:18px}
+.chain .m{color:var(--violet)}
+
+/* ciklusi */
+.cycles{display:grid;gap:8px}
+.cyc{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:12px;padding:12px;border-radius:10px;background:var(--panel-2);border:1px solid transparent}
+.cyc.now{border-color:var(--gold)}
+.cyc .rn{font-family:var(--f-display);font-size:20px;color:var(--muted);width:28px}
+.cyc .yrs{font-size:13px;color:var(--muted)}
+.cyc .vi{display:grid;justify-items:center;gap:0;min-width:46px}
+.cyc .vi b{font-size:22px;font-variant-numeric:tabular-nums}
+.cyc .vi span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cyc .vi.i b{color:var(--violet)}
+.cyc .vi.zero b{color:var(--bad)}
+
+/* aktivacije */
+.act{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px;border-radius:10px;background:var(--panel-2)}
+.act .n{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--violet);color:#17101c;font-weight:700;font-size:17px}
+
+/* sinastrija */
+.syn-pick{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end}
+.syn-pick .x{font-family:var(--f-display);color:var(--gold);font-size:24px;padding-bottom:8px}
+.vert{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.vert div{padding:12px 6px;border-radius:10px;background:var(--panel-2);display:grid;gap:2px}
+.vert .eq{font-size:13px;color:var(--muted)}
+.vert b{font-size:26px;font-family:var(--f-display);font-weight:400;color:var(--gold)}
+.vert span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vert .main{outline:1px solid var(--gold)}
+.sum{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-variant-numeric:tabular-nums;align-items:center}
+.sum .k{font-size:13px;color:var(--muted)}
+.sum .add{font-size:15px;letter-spacing:.1em}
+.sum .res{font-family:var(--f-display);font-size:22px;color:var(--gold);letter-spacing:.14em}
+
+/* donja navigacija */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#140d18f2;backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.nav button{background:none;border:0;padding:10px 4px 12px;display:grid;justify-items:center;gap:3px;color:var(--muted);font-size:12px;cursor:pointer}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:var(--gold)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.empty{padding:22px 12px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.jumpsel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 57px);z-index:4;background:var(--bg);padding-block:10px;display:flex;align-items:center;gap:10px}
+.jumpsel label{flex-direction:row;display:flex;align-items:center;gap:10px;width:100%}
+.jumpsel select{padding:9px 12px;font-size:15px;flex:1}
+.jumpsel label span{white-space:nowrap}
+.matrix{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--gold);border-radius:12px;overflow:hidden}
+.matrix div{min-height:64px;display:grid;place-items:center;font-size:20px;font-weight:600;letter-spacing:.08em;font-variant-numeric:tabular-nums;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;text-align:center;word-break:break-all}
+.matrix div:nth-child(3n){border-right:0}
+.matrix div:nth-last-child(-n+3){border-bottom:0}
+.matrix .prazno{color:var(--muted);font-weight:400}
+.inkrow{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:20px;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.inkrow.date{color:var(--ink)}
+.inkrow.extra{color:var(--gold)}
+.kuce{background:#fff;border-radius:12px;padding:10px}
+.houses{display:grid;gap:8px}
+.house{padding:10px 12px;border-radius:10px;background:var(--panel-2);display:grid;gap:6px;border:1px solid transparent}
+.house.asc{border-color:var(--gold)}
+.hh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700}
+.hh em{font-style:normal;color:#1a1220;background:var(--gold);border-radius:6px;padding:1px 6px;font-size:12px;margin-left:6px;vertical-align:1px}
+summary.hh{cursor:pointer;list-style:none;align-items:center}
+summary.hh::-webkit-details-marker{display:none}
+summary.hh::after{content:"▾";color:var(--gold);margin-left:auto;transition:transform .2s}
+details[open]>summary.hh::after{transform:rotate(180deg)}
+.hbody{display:grid;gap:6px;padding-top:6px}
+.osa{font-size:13px;color:var(--muted);padding:6px 8px;border-radius:8px;background:var(--violet-soft)}
+.osa b{color:var(--ink)}
+.hsrc{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.hsrc span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:62px}
+.hsrc b{font-variant-numeric:tabular-nums;background:#00000030;border-radius:7px;padding:3px 8px;font-size:15px;border:1px solid transparent}
+.hsrc b.plus{background:#2f9e4f;color:#fff}
+.hsrc b.minus{background:#d03b3b;color:#fff}
+.legend-d{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend-d i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend-d i.plus{background:#2f9e4f}.legend-d i.minus{background:#d03b3b}
+.akcije{flex-wrap:nowrap;gap:6px;align-items:center}
+.akcije .btn{padding:8px 10px;font-size:13px;white-space:nowrap}
+.btn.inst{margin-left:auto;font-size:13px;padding:8px 12px;white-space:nowrap;background:#f5c518;color:#1a1220;box-shadow:0 0 0 3px #f5c51840,0 6px 18px #f5c51833;font-weight:800}
+.foot{font-size:12px;color:var(--muted);text-align:center;padding-top:8px}
+.tiles{display:grid;gap:8px}
+.tline{display:flex;flex-wrap:wrap;align-items:center;gap:3px}
+.tline .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);width:100%}
+.tile{min-width:24px;padding:3px 4px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);display:grid;justify-items:center;gap:2px;font-weight:600;font-size:13px;cursor:pointer;line-height:1.1}
+.tile small{font-size:10px;color:var(--gold);font-weight:600;line-height:1}
+.tile.dig{border-color:var(--gold);color:var(--gold)}
+.join{width:14px;height:14px;border:1px solid var(--violet);border-radius:50%;background:none;color:var(--violet);cursor:pointer;font-size:11px;line-height:1;padding:0;display:grid;place-items:center;margin:0 -1px}
+.tline .none{font-size:13px;color:var(--muted)}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand" aria-label="Nan Numero">
+      <img src="logo-mali.png" alt="" style="width:34px;height:34px;border-radius:8px">
+      Nan Numero
+    </div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="view"></main>
+  <footer class="foot" style="padding-top:20px">© <span id="yr"></span> Kolundžija Zorica. Sva prava zadržana.</footer>
+</div>
+
+<nav class="nav" aria-label="Glavni meni">
+  <div class="nav-in">
+    <button data-go="osobe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Osobe</button>
+    <button data-go="karta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 21 20H3Z"/><path d="M7.5 15h9M9.7 11h4.6"/></svg>Karta</button>
+    <button data-go="sinastrija"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>Sinastrija</button>
+  </div>
+</nav>
+
+<script>
+/* Nan Numero – računanje po pravilima iz predavanja (Osnove, Piramida, Ciklusi, Kaldeja, Sinastrija) */
+(function (root) {
+  'use strict';
+
+  // ---------- osnovno ----------
+  const digits = s => String(s).replace(/\D/g, '').split('').map(Number);
+  const red = n => { n = Math.abs(n); while (n > 9) n = digits(n).reduce((a, b) => a + b, 0); return n; };
+  const pad2 = n => String(n).padStart(2, '0');
+  // svođenje sa čuvanjem master brojeva (Kaldeja): vraća lanac npr. [95, 14, 5]
+  function chainMaster(n) {
+    const out = [n];
+    while (n > 9 && n !== 11 && n !== 22 && n !== 33) { n = digits(n).reduce((a, b) => a + b, 0); out.push(n); }
+    return out;
+  }
+  // sabiranje dva koda cifru po cifru (268 + 551 = 729)
+  const addCodes = (a, b) => { const x = digits(a), y = digits(b); return x.map((d, i) => red(d + (y[i] || 0))).join(''); };
+
+  // ---------- piramida ----------
+  function pyramid(seq) {
+    const rows = [digits(seq)];
+    while (rows[rows.length - 1].length > 1) {
+      const r = rows[rows.length - 1], n = [];
+      for (let i = 0; i < r.length - 1; i++) n.push(red(r[i] + r[i + 1]));
+      rows.push(n);
+    }
+    return rows;
+  }
+
+  // ---------- stepeni ----------
+  // 1,13,25 → 8 Ovan; 2,14,26 → 6 Bik ... stepeni postoje samo od 1 do 29 (30 i 31 nemaju stepen)
+  const ZNACI = [
+    [8, 'Ovan'], [6, 'Bik'], [5, 'Blizanci'], [2, 'Rak'], [1, 'Lav'], [5, 'Devica'],
+    [6, 'Vaga'], [0, 'Škorpija'], [3, 'Strelac'], [4, 'Jarac'], [7, 'Vodolija'], [9, 'Ribe']
+  ];
+  function stepen(n) {
+    if (!Number.isInteger(n) || n < 1 || n > 29) return null;
+    const [broj, znak] = ZNACI[(n - 1) % 12];
+    return { broj, znak, tekst: broj + '. ' + znak };
+  }
+
+  // ---------- dan / noć ----------
+  const SATNICA = [ // [od, do] u minutama, po mjesecima
+    ['07:30', '16:00'], ['07:05', '16:25'], ['06:25', '17:10'], ['06:20', '18:45'], ['05:40', '19:20'], ['05:15', '20:00'],
+    ['05:00', '21:25'], ['05:35', '20:00'], ['06:05', '19:00'], ['06:45', '18:10'], ['06:45', '16:15'], ['07:00', '15:50']
+  ];
+  const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  function danNoc(mesec, sat, minut) {
+    if (sat == null || isNaN(sat)) return null;
+    const [od, doo] = SATNICA[mesec - 1].map(toMin), t = sat * 60 + (minut || 0);
+    return { tip: t >= od && t <= doo ? 'DAN' : 'NOĆ', od: SATNICA[mesec - 1][0], do: SATNICA[mesec - 1][1] };
+  }
+
+  // ---------- vladavina brojeva po godinama ----------
+  const VLADAVINA = {
+    0: { opis: '0–5 godina (nulta, 1, 2, 3, 4, 5; predaktivacija 4 na 5. godinu), 32. godina, 50–60 (51–60), najjača u 55., 80+', test: g => g <= 5 || g === 32 || (g >= 51 && g <= 60) || g >= 80, jaka: g => g === 55 },
+    1: { opis: '1, 11, 21, 31, 41, 51… godina; najjača 36–41 (36, 37, 38, 39, 40, 41)', test: g => g % 10 === 1 || (g >= 36 && g <= 41), jaka: g => g >= 36 && g <= 41 },
+    2: { opis: '7. mesec trudnoće, 7. mesec života, 25. i 66. godina', test: g => g === 25 || g === 66 },
+    3: { opis: '12, 24, 45, 79+; 56–69, najjača u 56. kad počinje i u 69. kad se završava', test: g => [12, 24, 45].includes(g) || g >= 79 || (g >= 56 && g <= 69), jaka: g => g === 56 || g === 69 },
+    4: { opis: '1. i 8. mesec trudnoće, 1. i 8. mesec života, 30, 43 i po, 57, 67 i po (između 67 i 68)', test: g => [30, 43, 57, 67].includes(g) },
+    5: { opis: 'od 5. do 13. godine (5–13), 20, 48, 76', test: g => (g >= 5 && g <= 13) || [20, 48, 76].includes(g) },
+    6: { opis: 'od 14. do 28. godine (14–28) kada ima najjači uticaj, 45 i 78', test: g => (g >= 14 && g <= 28) || [45, 78].includes(g), jaka: g => g >= 14 && g <= 28 },
+    7: { opis: '4, 14, 24, 34, 44 – mladost, tinejdž doba; uticaj u 40-im godinama, aktivacija u 44.', test: g => [4, 14, 24, 34, 44].includes(g) || (g >= 40 && g <= 49), jaka: g => g === 44 },
+    8: { opis: 'od 20. do 30. (20–30), najjača oko 25 (24–26); od 41. do 56. (41–56)', test: g => (g >= 20 && g <= 30) || (g >= 41 && g <= 56), jaka: g => g >= 24 && g <= 26 },
+    9: { opis: '3, 13, 23, 33, 43, 53, 63, 73, 83, 93; najjača u 33.', test: g => g % 10 === 3, jaka: g => g === 33 }
+  };
+
+  // ---------- Kaldeja – tablice ----------
+  // svaka tablica: lista redova po 9 kolona (kolona = broj 1..9)
+  const T = (rows) => { const m = {}; rows.forEach(r => r.forEach((l, i) => { if (l) l.split('|').forEach(x => m[x.toUpperCase()] = i + 1); })); return m; };
+  const PISMA = {
+    'Svetska': T([
+      ['A', 'B', 'C|Č|Ć', 'D|Đ|DŽ|DZ', 'E', 'F', 'G', 'H', 'I'],
+      ['J', 'K', 'L|LJ', 'M', 'N|NJ', 'O', 'P', 'Q', 'R'],
+      ['S|Š', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z|Ž', '']]),
+    'Hrvatska i BiH': T([
+      ['A', 'B', 'C', 'Č', 'Ć', 'D', 'DŽ|DZ', 'Đ', 'E'],
+      ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'LJ', 'M'],
+      ['N', 'NJ', 'O', 'P', 'R', 'S', 'Š', 'T', 'U'],
+      ['V', 'Z', 'Ž', '', '', '', '', '', '']]),
+    'Srbija': T([
+      ['A', 'B', 'V', 'G', 'D', 'Đ', 'E', 'Ž', 'Z'],
+      ['I', 'J', 'K', 'L', 'LJ', 'M', 'N', 'NJ', 'O'],
+      ['P', 'R', 'S', 'T', 'Ć', 'U', 'F', 'H', 'C'],
+      ['Č', 'DŽ|DZ', 'Š', '', '', '', '', '', '']]),
+    'Crna Gora': T([
+      ['A', 'B', 'C', 'Č', 'Ć', 'D', 'DŽ|DZ', 'Đ', 'E'],
+      ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'LJ', 'M'],
+      ['N', 'NJ', 'O', 'P', 'R', 'S', 'Š', 'Ś', 'T'],
+      ['U', 'V', 'Z', 'Ź', 'Ž', '', '', '', '']]),
+    'Slovenija': T([
+      ['A', 'B', 'C', 'Č', 'D', 'E', 'F', 'G', 'H'],
+      ['I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R'],
+      ['S', 'Š', 'T', 'U', 'V', 'Z', 'Ž', '', '']]),
+    'Makedonija': T([
+      ['A', 'B', 'V', 'G', 'D', 'Ѓ|GJ', 'E', 'Ž', 'Z'],
+      ['Ѕ|DZ', 'I', 'J', 'K', 'L', 'LJ', 'M', 'N', 'NJ'],
+      ['O', 'P', 'R', 'S', 'T', 'Ќ|KJ', 'U', 'F', 'H'],
+      ['C', 'Č', 'DŽ', 'Š', '', '', '', '', '']]),
+    'Albanija': T([
+      ['A', 'B', 'C', 'Ç', 'D', 'DH', 'E', 'Ë', 'F'],
+      ['G', 'GJ', 'H', 'I', 'J', 'K', 'L', 'LJ|LL', 'M'],
+      ['N', 'NJ', 'O', 'P', 'Q', 'R', 'S', 'SH', 'T'],
+      ['TH', 'U', 'V', 'X', 'XH', 'Y', 'Z', 'ZH', '']]),
+    'Rusija': T([
+      ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З'],
+      ['И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р'],
+      ['С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ'],
+      ['Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я', '', '', '']])
+  };
+  // ćirilica → latinica (za srpsko/crnogorsko/makedonsko pismo)
+  const CYR = { 'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Đ', 'Е': 'E', 'Ж': 'Ž', 'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'LJ', 'М': 'M', 'Н': 'N', 'Њ': 'NJ', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'Ć', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'Č', 'Џ': 'DŽ', 'Ш': 'Š' };
+  const MK_KEEP = { 'Ѓ': 'Ѓ', 'Ќ': 'Ќ', 'Ѕ': 'Ѕ' };
+
+  function slova(tekst, pismo) {
+    const tab = PISMA[pismo] || PISMA.Svetska;
+    let s = String(tekst || '').toUpperCase();
+    if (pismo !== 'Rusija') s = s.split('').map(c => MK_KEEP[c] || CYR[c] || c).join('');
+    const out = [], nepoznata = [];
+    let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (/[\s\-'.,]/.test(c)) { i++; continue; }
+      const two = s.substr(i, 2);
+      if (two.length === 2 && tab[two] != null) { out.push({ slovo: two, broj: tab[two] }); i += 2; continue; }
+      if (tab[c] != null) out.push({ slovo: c, broj: tab[c] }); else nepoznata.push(c);
+      i++;
+    }
+    return { niz: out, nepoznata };
+  }
+
+  // kockice: svaka kockica je tačno jedno slovo (npr. 'NJ' ili 'N' i 'J' odvojeno)
+  function izKockica(kockice, pismo) {
+    const tab = PISMA[pismo] || PISMA.Svetska, out = [], nepoznata = [];
+    (kockice || []).forEach(k => {
+      let s = String(k).toUpperCase();
+      if (pismo !== 'Rusija') s = s.split('').map(c => MK_KEEP[c] || CYR[c] || c).join('');
+      if (tab[s] != null) out.push({ slovo: s, broj: tab[s] });
+      else if (s.length > 1 && s.split('').every(c => tab[c] != null)) s.split('').forEach(c => out.push({ slovo: c, broj: tab[c] }));
+      else nepoznata.push(s);
+    });
+    return { niz: out, nepoznata };
+  }
+  // podela teksta na kockice: dvoslovi (LJ, NJ, DŽ…) se spajaju samo unutar jedne reči; DZ se ne spaja sam
+  function uKockice(tekst, pismo) {
+    const tab = PISMA[pismo] || PISMA.Svetska, out = [];
+    String(tekst || '').split(/\s+/).filter(Boolean).forEach(rec => {
+      const u = rec.toUpperCase(), orig = rec;
+      let i = 0;
+      while (i < u.length) {
+        const two = u.substr(i, 2);
+        if (two.length === 2 && two !== 'DZ' && tab[two] != null) { out.push(orig.substr(i, 2)); i += 2; }
+        else { if (/[^\-'.,]/.test(u[i])) out.push(orig[i]); i++; }
+      }
+    });
+    return out;
+  }
+  // može li se par kockica spojiti u jedno slovo u ovom pismu
+  const mozeSpojiti = (a, b, pismo) => { const tab = PISMA[pismo] || PISMA.Svetska; return a.length === 1 && b.length === 1 && tab[(a + b).toUpperCase()] != null; };
+
+  // ---------- glavna karta osobe ----------
+  function karta(o, danas) {
+    const d = +o.dan, m = +o.mesec, g = +o.godina;
+    const sat = o.sat === '' || o.sat == null ? null : +o.sat, min = o.minut === '' || o.minut == null ? null : +o.minut;
+    const datum = pad2(d) + pad2(m) + String(g);
+    danas = danas || new Date();
+
+    const bio = red(d + m), gen = red(digits(g).reduce((a, b) => a + b, 0)), licni = red(bio + gen);
+    const pitagora = '' + bio + gen + licni;
+    const inkonj = red(bio + gen + licni); // zbir cifara Pitagorinog koda, svedeno
+
+    const pir = pyramid(datum);
+    const n = pir.length; // 8 redova
+    const piramidalni = pir[n - 2].join('') + pir[n - 1].join('');
+    const jedinstveni = addCodes(pitagora, piramidalni);
+    const polja = {
+      zivot: pir[1].join(''), zdravlje: pir[2].join(''), porodica: pir[3].join(''),
+      deca: pir[4].join(''), kontakti: pir[5].join('')
+    };
+
+    // ponoć se piše 24:00; 00:01–00:59 nema stepen sata, ali ima stepen minuta
+    const sDan = stepen(d), sMes = stepen(m), sSat = sat != null && sat > 0 ? stepen(sat) : null, sMin = min != null ? stepen(min) : null;
+    const sd = sDan ? sDan.broj : null, sdt = sDan ? sDan.tekst : null;
+    const g2 = String(g).slice(-2);
+    // osnovne konjukcije: stepen sa jednocifrenim brojem; dvocifren broj ide u separacione
+    const ss = sSat ? sSat.broj : null, sm = sMin ? sMin.broj : null;
+    const konjOsnovne = [];
+    const K = (naziv, a, b, vreme) => { if (a != null && b != null) konjOsnovne.push({ naziv, a, b, vreme: !!vreme }); };
+    K('Stepen dana – stepen meseca', sd, sMes.broj);
+    if (m < 10) { K('Stepen meseca – mesec', sMes.broj, m); K('Stepen dana – mesec', sd, m); }
+    if (sat != null) {
+      K('Stepen sata – stepen minuta', ss, sm, 1);
+      if (min != null && min < 10) { K('Stepen sata – minut', ss, min, 1); K('Stepen minuta – minut', sm, min, 1); }
+    }
+    // separacione konjukcije: stepen gleda na dvocifren broj → X-N, X-prva cifra, X-druga cifra
+    const separacione = [];
+    const SEP = (naziv, x, n, vreme) => { if (x == null || n == null || n < 10) return; const c = String(n).split('').map(Number); separacione.push({ naziv, x, n, vreme: !!vreme, parovi: [[x, n], [x, c[0]], [x, c[1]]] }); };
+    SEP('Stepen dana – dan', sd, d);
+    SEP('Stepen dana – mesec', sd, m);
+    SEP('Stepen meseca – mesec', sMes.broj, m);
+    if (sat != null) { SEP('Stepen sata – sat', ss, sat, 1); SEP('Stepen sata – minut', ss, min, 1); SEP('Stepen minuta – minut', sm, min, 1); }
+    const aspekti = {
+      konjukcije: konjOsnovne,
+
+      opozicije: [
+        { naziv: 'Stepen dana – godina', a: sd, b: g2 },
+        { naziv: 'Dan – godina', a: d, b: g2 }
+      ],
+      sekstil: [
+        { naziv: 'Stepen dana naspram bioritamskog broja', a: sdt, b: bio },
+        { naziv: 'Dan rođenja naspram bioritamskog broja', a: d, b: bio }
+      ],
+      trigon: [
+        { naziv: 'Stepen dana naspram ličnog broja', a: sdt, b: licni },
+        { naziv: 'Dan rođenja naspram ličnog broja', a: d, b: licni }
+      ],
+      inkonjukcija: [
+        { naziv: 'Dan rođenja – inkonjukcija', a: d, b: inkonj },
+        { naziv: 'Stepen dana – inkonjukcija', a: sd, b: inkonj }
+      ],
+      kvadrat: [
+        { naziv: 'Stepen dana naspram generacijskog broja', a: sdt, b: gen },
+        { naziv: 'Dan rođenja naspram generacijskog broja', a: d, b: gen }
+      ]
+    };
+
+    // ciklusi
+    const rd = red(d), rm = red(m), ry = red(digits(g).reduce((a, b) => a + b, 0));
+    const V1 = red(rm + rd), I1 = Math.abs(rm - rd), V2 = red(rd + ry), I2 = Math.abs(rd - ry);
+    const V3 = red(V1 + V2), I3 = Math.abs(I1 - I2), V4 = red(rm + ry), I4 = Math.abs(rm - ry);
+    const kraj1 = 36 - licni;
+    const ciklusi = [
+      { br: 1, v: V1, i: I1, od: 0, do: kraj1 },
+      { br: 2, v: V2, i: I2, od: kraj1 + 1, do: kraj1 + 9 },
+      { br: 3, v: V3, i: I3, od: kraj1 + 10, do: kraj1 + 18 },
+      { br: 4, v: V4, i: I4, od: kraj1 + 19, do: null }
+    ];
+
+    // godine (puni rođendani)
+    let godine = danas.getFullYear() - g;
+    if (danas.getMonth() + 1 < m || (danas.getMonth() + 1 === m && danas.getDate() < d)) godine--;
+    const aktivni = Object.keys(VLADAVINA).map(Number).filter(k => VLADAVINA[k].test(godine))
+      .map(k => ({ broj: k, opis: VLADAVINA[k].opis, jaka: !!(VLADAVINA[k].jaka && VLADAVINA[k].jaka(godine)) }));
+
+    // piramidalna godina: kreće od polja života; 1. aspekt = nulta godina, 2. aspekt = puna 1. godina …
+    // krug traje 28 godina (0–27), poslednji broj se nastavlja na prvi iz polja života (dupla aktivacija)
+    const mapa = [];
+    pir.slice(1).forEach((row, r) => row.forEach((x, j) => mapa.push({ x, r: r + 1, j })));
+    function piramidalnaGodina(god) {
+      if (god < 0) return null;
+      const k = god % 28, A = mapa[k], B = mapa[(k + 1) % mapa.length];
+      const dupla = k === mapa.length - 1;
+      const ispod = !dupla && A.r === B.r && pir[A.r + 1] ? pir[A.r + 1][A.j] : null;
+      const POLJA = ['', 'polje života', 'polje zdravlja i karme', 'polje porodice i braka', 'polje dece', 'polje kontakata i veza', 'piramidalni kod', 'piramidalni kod'];
+      return { aspekt: '' + A.x + B.x, krak: ispod, potpis: '' + A.x + B.x + (ispod != null ? ispod : ''), krug: Math.floor(god / 28) + 1, polje: dupla ? 'dupla aktivacija' : POLJA[A.r] };
+    }
+
+    // Kaldeja
+    let kaldeja = null;
+    if ((o.ime || '').trim() || (o.prezime || '').trim()) {
+      const pismo = o.pismo || 'Svetska';
+      const kI = Array.isArray(o.kIme) ? o.kIme : uKockice(o.ime, pismo), kP = Array.isArray(o.kPrezime) ? o.kPrezime : uKockice(o.prezime, pismo);
+      const s = izKockica(kI.concat(kP), pismo);
+      const bk = s.niz.reduce((a, b) => a + b.broj, 0);
+      const pliZbir = bk + d + m + digits(g).reduce((a, b) => a + b, 0);
+      const kp = s.niz.length > 1 ? pyramid(s.niz.map(x => x.broj).join('')) : null;
+      let posl = null;
+      if (kp && kp.length >= 3) posl = [kp[kp.length - 3].join(''), kp[kp.length - 2].join(''), kp[kp.length - 1].join('')];
+      kaldeja = {
+        pismo, slova: s.niz, nepoznata: s.nepoznata, kIme: izKockica(kI, pismo).niz, kPrezime: izKockica(kP, pismo).niz,
+        bk: chainMaster(bk), pli: chainMaster(pliZbir), piramida: kp, poslednja3: posl
+      };
+    }
+
+    const KU = kuce(godine);
+    return {
+      ulaz: { d, m, g, sat, min, datum },
+      godine, dnevno: danNoc(m, sat, min),
+      pitagora: { bio, gen, licni, kod: pitagora }, inkonjukcija: inkonj,
+      piramida: pir, piramidalni, jedinstveni, polja,
+      jedinstveniDetalji: digits(pitagora).map((x, i) => ({ a: x, b: +piramidalni[i], z: x + +piramidalni[i], r: red(x + +piramidalni[i]) })),
+      stepeni: { dan: sDan, mesec: sMes, sat: sSat, minut: sMin },
+      inkarnacije: inkarnacije(d, m, g),
+      kuce: KU,
+      aspekti, separacione, ciklusi, aktivni, piramidalnaGodina: piramidalnaGodina(godine), kaldeja
+    };
+  }
+
+  // ---------- inkarnacije: 4 dodatna broja i matrica (kvadrat 3x3) ----------
+  function inkarnacije(d, m, g) {
+    const dat = digits(pad2(d) + pad2(m) + String(g));
+    const d1 = dat.reduce((a, b) => a + b, 0);                    // zbir svih cifara datuma
+    const d2 = red(d1);                                           // zbir cifara prvog broja, do jedne cifre
+    const prva = dat.find(x => x !== 0);                          // prvi broj datuma bez nule
+    const d3 = Math.abs(d1 - 2 * prva);                           // minus se neutrališe u plus
+    const d4 = d3 > 9 ? digits(d3).reduce((a, b) => a + b, 0) : d3; // ne svodi se; jednocifren → preslikavanje
+    const dodatni = [d1, d2, d3, d4];
+    const gore = dat.filter(x => x !== 0).length;
+    const doleCifre = digits(dodatni.join(''));
+    const dole = doleCifre.filter(x => x !== 0).length;
+    const sve = dat.concat(doleCifre);
+    const polja = {}; for (let i = 1; i <= 9; i++) polja[i] = sve.filter(x => x === i).length;
+    return { datum: dat.join(''), dodatni, gore, dole, inkarnacija: gore + dole, polja };
+  }
+
+  // ---------- kuće: 12 kuća, ascendent se pomera svake godine (od rođendana do rođendana) ----------
+  const KUCE = { 1: 8, 2: 6, 3: 5, 4: 2, 5: 1, 6: 5, 7: 6, 8: 0, 9: 3, 10: 4, 11: 7, 12: 9 };
+  const KUCE_ZNAK = { 2: 'Bik', 3: 'Blizanci', 6: 'Devica', 7: 'Vaga' };
+  const stranaKuce = k => [11, 12, 1, 2, 3].includes(k) ? 'DAN' : [5, 6, 7, 8, 9].includes(k) ? 'NOĆ' : 'DAN i NOĆ';
+  function kuce(godine) {
+    const asc = godine >= 1 ? ((godine - 1) % 12) + 1 : null; // 1. godina = 1. kuća … 12. = 12. kuća, 13. = opet 1.
+    return { asc, broj: asc ? KUCE[asc] : null, strana: asc ? stranaKuce(asc) : null, sledeca: godine >= 0 ? (godine % 12) + 1 : null };
+  }
+
+  // ---------- aspekti po kućama: broj kuće je prvi broj aspekta, čita se sleva nadesno ----------
+  // piramida (bez reda datuma, vrh se nastavlja na prvi broj), dan i mesec bez nule (bez godine), i sva tri koda (vodoravno sleva nadesno, uspravno odozgo nadole)
+  function aspektiZaBroj(K, n) {
+    const pir = K.piramida, tok = [];
+    for (let r = 1; r < pir.length; r++) pir[r].forEach((x, j) => tok.push({ x, r, j }));
+    const piramida = [];
+    for (let i = 0; i < tok.length; i++) {
+      const A = tok[i], B = tok[(i + 1) % tok.length]; // vrh piramide se nastavlja na prvi broj prvog reda
+      if (A.x !== n) continue;
+      const krak = A.r === B.r && pir[A.r + 1] ? pir[A.r + 1][A.j] : null;
+      piramida.push(A.x + '-' + B.x + (krak != null ? '/' + krak : ''));
+    }
+    const dm = digits(pad2(K.ulaz.d) + pad2(K.ulaz.m)).filter(x => x !== 0), datum = [];
+    for (let i = 0; i < dm.length - 1; i++) if (dm[i] === n) datum.push(dm[i] + '-' + dm[i + 1]);
+    const kod = [K.pitagora.kod, K.piramidalni, K.jedinstveni].map(digits), kodovi = [];
+    kod.forEach(r => { for (let i = 0; i < 2; i++) if (r[i] === n) kodovi.push(r[i] + '-' + r[i + 1]); });
+    for (let c = 0; c < 3; c++) for (let r = 0; r < 2; r++) if (kod[r][c] === n) kodovi.push(kod[r][c] + '-' + kod[r + 1][c]);
+    return { piramida, datum, kodovi };
+  }
+
+  // ---------- dostojanstva ----------
+  // oznaka: B = 6 Bik, V = 6 Vaga, Z = 5 Blizanci, D = 5 Devica (dnevno: Bik i Blizanci; noćno: Vaga i Devica)
+  const DOST = {
+    sediste: ['0-0', '1-1', '2-2', '3-3', '3-9', '4-4', '5-5', '6-6', '7-7', '8-8', '9-9', '9-3'],
+    egzaltacija: ['0-8', '1-8', '2-6:B', '3-2', '4-6', '5-7', '6-9', '7-4', '7-5', '8-4', '9-7'],
+    izgon: ['0-6:B', '1-7', '2-4', '3-5:Z', '4-1', '4-2', '5-3', '5-9', '6-8', '7-1', '7-2', '8-6:V', '9-5:D'],
+    pad: ['0-6:B', '1-6:V', '2-0', '3-4', '4-8', '5-1', '6-5:D', '6-1', '7-6', '8-2', '9-1']
+  };
+  function dostojanstvaPara(par, rod) {
+    const out = [];
+    Object.keys(DOST).forEach(vrsta => DOST[vrsta].forEach(e => {
+      const [p, oz] = e.split(':');
+      if (p !== par) return;
+      if (oz) { if (!rod) return; const dan = rod === 'DAN'; if ((oz === 'B' || oz === 'Z') !== dan) return; }
+      out.push(vrsta);
+    }));
+    return out;
+  }
+  // aspekt kao '2-2/4' → parovi 2-2 i 2-4; malefik (izgon, pad) uvek pobeđuje
+  function dostojanstvo(asp, rod) {
+    const [glavni, krak] = asp.split('/'), [a, b] = glavni.split('-');
+    const parovi = [a + '-' + b].concat(krak != null ? [a + '-' + krak] : []);
+    const vrste = []; parovi.forEach(p => dostojanstvaPara(p, rod).forEach(v => vrste.push(p + ' ' + v)));
+    const minus = vrste.some(v => /izgon|pad/.test(v)), plus = vrste.some(v => /sediste|egzaltacija/.test(v));
+    return { boja: minus ? 'minus' : plus ? 'plus' : null, vrste };
+  }
+
+  // ---------- sinastrija ----------
+  function sinastrija(A, B) {
+    const kod = addCodes(A.pitagora.kod, B.pitagora.kod);
+    return {
+      kod,
+      opozicija: kod[0] + '-' + kod[2],
+      vertikale: {
+        bioritam: { a: A.pitagora.bio, b: B.pitagora.bio, z: red(A.pitagora.bio + B.pitagora.bio) },
+        generacijski: { a: A.pitagora.gen, b: B.pitagora.gen, z: red(A.pitagora.gen + B.pitagora.gen) },
+        licni: { a: A.pitagora.licni, b: B.pitagora.licni, z: red(A.pitagora.licni + B.pitagora.licni) }
+      },
+      polja: {
+        porodica: addCodes(A.polja.porodica, B.polja.porodica),
+        deca: addCodes(A.polja.deca, B.polja.deca),
+        kontakti: addCodes(A.polja.kontakti, B.polja.kontakti)
+      },
+      piramidalni: addCodes(A.piramidalni, B.piramidalni),
+      jedinstveni: addCodes(A.jedinstveni, B.jedinstveni)
+    };
+  }
+
+  const api = { dostojanstvo, aspektiZaBroj, KUCE, KUCE_ZNAK, stranaKuce, kuce, inkarnacije, izKockica, uKockice, mozeSpojiti, red, pyramid, stepen, danNoc, karta, sinastrija, slova, chainMaster, addCodes, PISMA: Object.keys(PISMA), VLADAVINA, ZNACI };
+  if (typeof module !== 'undefined') module.exports = api; else root.NN = api;
+})(this);
+
+</script>
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = n => String(n).padStart(2,'0');
+
+/* ---------- čuvanje osoba (na ovom uređaju) ---------- */
+const KEY = 'nannumero_osobe_v2';
+const PRIMERI = [
+  { id:'primer-1', ime:'Jelena', prezime:'Marković', dan:17, mesec:5, godina:1988, sat:14, minut:20, pismo:'Svetska', primer:true },
+  { id:'primer-2', ime:'Marko', prezime:'Ilić', dan:21, mesec:1, godina:1984, sat:22, minut:10, pismo:'Svetska', primer:true }
+];
+function load(){ try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch(e){} return PRIMERI.slice(); }
+let osobe = load();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(osobe)); } catch(e){} }
+
+let formK = null;
+let ekran = 'osobe', aktivna = osobe[0] ? osobe[0].id : null, uredi = null, brisi = null;
+let synA = osobe[0] ? osobe[0].id : null, synB = osobe[1] ? osobe[1].id : null;
+
+/* ---------- pomoćno ---------- */
+const imeOsobe = o => ((o.ime||'') + ' ' + (o.prezime||'')).trim() || 'Bez imena';
+const datumOsobe = o => `${pad2(o.dan)}.${pad2(o.mesec)}.${o.godina}.` + (o.sat!==''&&o.sat!=null ? ` u ${pad2(o.sat)}:${pad2(o.minut||0)}` : '');
+const GL = { konjukcije:['☌','g-konj','Konjukcije'], opozicije:['☍','g-opoz','Opozicije'], sekstil:['⚹','g-seks','Sekstil'], trigon:['△','g-trig','Trigon'], kvadrat:['□','g-kvad','Kvadrat'], inkonjukcija:['⚻','g-inko','Inkonjukcija'] };
+
+function cells(row, cls, hot){ return row.map((x,i)=>`<div class="cell ${cls||''} ${hot&&hot.includes(i)?'hot':''}">${x}</div>`).join(''); }
+
+/* ---------- ekran: osobe ---------- */
+function vOsobe(){
+  const o = uredi ? osobe.find(x=>x.id===uredi) : null;
+  const f = o || { ime:'', prezime:'', dan:'', mesec:'', godina:'', sat:'', minut:'', pismo:'Svetska' };
+  if (!formK) formK = { ime: Array.isArray(f.kIme) ? f.kIme.slice() : NN.uKockice(f.ime, f.pismo), prezime: Array.isArray(f.kPrezime) ? f.kPrezime.slice() : NN.uKockice(f.prezime, f.pismo) };
+  const lista = osobe.length ? osobe.map(p => {
+    const k = NN.karta(p);
+    return `<button class="person" data-open="${p.id}">
+      <div class="av">${esc((p.ime||'?')[0]||'?')}</div>
+      <div class="meta"><b>${esc(imeOsobe(p))}</b><span class="muted small">${datumOsobe(p)}</span> ${p.primer?'<span class="tag">primer</span>':''}</div>
+      <div class="code num" aria-label="Pitagorin kod">${k.pitagora.kod}</div></button>`;
+  }).join('') : `<div class="empty">Još nema sačuvanih osoba. Unesite prvu osobu iznad.</div>`;
+  return `<div class="stack">
+  <form class="card" id="forma" novalidate>
+    <h2>${o ? 'Izmena osobe' : 'Nova osoba'}</h2>
+    <div class="grid2">
+      <label for="f-ime">Ime<input id="f-ime" autocomplete="off" value="${esc(f.ime)}"></label>
+      <label for="f-prezime">Prezime<input id="f-prezime" autocomplete="off" value="${esc(f.prezime)}"></label>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="grid3">
+      <label for="f-dan">Dan<input id="f-dan" inputmode="numeric" maxlength="2" placeholder="dd" value="${esc(f.dan)}"></label>
+      <label for="f-mesec">Mesec<input id="f-mesec" inputmode="numeric" maxlength="2" placeholder="mm" value="${esc(f.mesec)}"></label>
+      <label for="f-godina">Godina<input id="f-godina" inputmode="numeric" maxlength="4" placeholder="gggg" value="${esc(f.godina)}"></label>
+    </div>
+    <div class="grid3">
+      <label for="f-sat">Sat<input id="f-sat" inputmode="numeric" maxlength="2" placeholder="hh" value="${esc(f.sat)}"></label>
+      <label for="f-minut">Minuti<input id="f-minut" inputmode="numeric" maxlength="2" placeholder="mm" value="${f.minut===''||f.minut==null?'':pad2(f.minut)}"></label>
+      <label for="f-pismo">Pismo<select id="f-pismo">${NN.PISMA.map(p=>`<option ${p===f.pismo?'selected':''}>${p}</option>`).join('')}</select></label>
+    </div>
+    <div id="f-err" class="err" hidden></div>
+    <div class="row">
+      <button class="btn" type="submit" style="flex:1">${o ? 'Sačuvaj izmene' : 'Izračunaj i sačuvaj'}</button>
+      ${o ? '<button class="btn ghost" type="button" id="f-odustani">Odustani</button>' : ''}
+    </div>
+    <p class="muted small" style="margin:0">Ponoć se upisuje kao 24:00. Ako se vreme rođenja ne zna, ostavite prazno.</p>
+  </form>
+  <section class="card">
+    <div class="asp-head"><h3>Sačuvane osobe</h3><span class="note">${osobe.length}</span></div>
+    <div class="stack" style="padding:0;gap:8px">${lista}</div>
+  </section>
+  </div>`;
+}
+function bindOsobe(){
+  $('#forma').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = id => $('#'+id).value.trim();
+    const d = +v('f-dan'), m = +v('f-mesec'), g = +v('f-godina');
+    const sat = v('f-sat'), min = v('f-minut');
+    let err = '';
+    const dim = new Date(g, m, 0).getDate();
+    if (!d || !m || !g) err = 'Upišite dan, mesec i godinu rođenja.';
+    else if (m < 1 || m > 12) err = 'Mesec mora biti od 1 do 12.';
+    else if (g < 1800 || g > new Date().getFullYear()) err = 'Upišite godinu sa četiri cifre, npr. 1985.';
+    else if (d < 1 || d > dim) err = `Ovaj mesec ima ${dim} dana.`;
+    else if (sat !== '' && (+sat < 0 || +sat > 24 || isNaN(+sat))) err = 'Sat mora biti od 0 do 24. Ponoć je 24:00.';
+    else if (+sat === 24 && +min > 0) err = 'Posle ponoći se piše 00:01, 00:02… a ne 24:01.';
+    else if (sat !== '' && min === '') err = 'Upišite i minute (npr. 00).';
+    else if (min !== '' && (+min < 0 || +min > 59 || isNaN(+min))) err = 'Minuti moraju biti od 0 do 59.';
+    if (err){ const b = $('#f-err'); b.textContent = err; b.hidden = false; return; }
+    const p = { ime:v('f-ime'), prezime:v('f-prezime'), dan:d, mesec:m, godina:g, sat: sat===''?'':+sat, minut: min===''?'':+min, pismo: $('#f-pismo').value, kIme: formK.ime.slice(), kPrezime: formK.prezime.slice() };
+    if (uredi){ Object.assign(osobe.find(x=>x.id===uredi), p, {primer:false}); aktivna = uredi; }
+    else { p.id = 'o' + Date.now(); osobe.unshift(p); aktivna = p.id; }
+    uredi = null; formK = null; save(); idi('karta');
+  });
+  // kockice za Kaldeju
+  const pis = () => $('#f-pismo').value;
+  const reTiles = () => {
+    const box = $('#tiles'); if (!box) return;
+    const line = (f, naziv) => {
+      const t = formK[f];
+      if (!t.length) return `<div class="tline"><span class="lbl">${naziv} – kockice</span><span class="none">upišite ${naziv.toLowerCase()} iznad</span></div>`;
+      const s = NN.izKockica(t, pis()).niz;
+      let html = '';
+      t.forEach((x,i) => {
+        const br = (NN.izKockica([x], pis()).niz[0]||{}).broj;
+        html += `<button type="button" class="tile ${x.length>1?'dig':''}" data-f="${f}" data-i="${i}" ${x.length>1?'title="Podeli na dva slova"':''}>${esc(x.toUpperCase())}<small>${br??'?'}</small></button>`;
+        if (i < t.length-1 && NN.mozeSpojiti(x, t[i+1], pis())) html += `<button type="button" class="join" data-j="${f}" data-i="${i}" aria-label="Spoji ${esc(x+t[i+1])} u jedno slovo" title="Spoji u jedno slovo">+</button>`;
+      });
+      return `<div class="tline"><span class="lbl">${naziv} – kockice · zbir ${s.reduce((a,b)=>a+b.broj,0)}</span>${html}</div>`;
+    };
+    box.innerHTML = line('ime','Ime') + line('prezime','Prezime');
+    box.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { const f=b.dataset.f, i=+b.dataset.i, x=formK[f][i]; if (x.length>1){ formK[f].splice(i,1,...x.split('')); reTiles(); } });
+    box.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { const f=b.dataset.j, i=+b.dataset.i; formK[f].splice(i,2,formK[f][i]+formK[f][i+1]); reTiles(); });
+  };
+  $('#f-ime').addEventListener('input', e => { formK.ime = NN.uKockice(e.target.value, pis()); reTiles(); });
+  $('#f-prezime').addEventListener('input', e => { formK.prezime = NN.uKockice(e.target.value, pis()); reTiles(); });
+  $('#f-pismo').addEventListener('change', () => { formK.ime = NN.uKockice($('#f-ime').value, pis()); formK.prezime = NN.uKockice($('#f-prezime').value, pis()); reTiles(); });
+  reTiles();
+  const od = $('#f-odustani'); if (od) od.onclick = () => { uredi = null; formK = null; render(); };
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { aktivna = b.dataset.open; idi('karta'); });
+}
+
+
+/* ---------- Kuće (krug sa 12 kuća) ---------- */
+function kuceSVG(asc){
+  const cx = 333, cy = 340, R = '#e8262a', G = '#3bbf1f', B = '#111';
+  // [ugao od vrha u stepenima, boja, broj u krugu, broj kuće spolja]
+  const K = [[0,R,4,10],[30,B,3,9],[62,G,0,8],[90,R,6,7],[120,B,5,6],[150,G,1,5],[180,R,2,4],[210,B,5,3],[242,G,6,2],[270,R,8,1],[298,B,9,12],[330,G,7,11]];
+  let s = '';
+  K.forEach(([a,c,n,k]) => {
+    const red = c === R, rr = red ? 240 : 230, cr = red ? 38 : 27;
+    const t = a * Math.PI / 180, x = cx + rr * Math.sin(t), y = cy - rr * Math.cos(t);
+    if (k === asc) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${cr + 12}" fill="#f5c84c" opacity=".55"/>`;
+    const lx = cx + (rr - cr) * Math.sin(t), ly = cy - (rr - cr) * Math.cos(t);
+    s += `<line x1="${cx}" y1="${cy}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${c}" stroke-width="3"/>`;
+    s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${cr}" fill="#fff" stroke="${c}" stroke-width="3"/>`;
+    s += `<text x="${x.toFixed(1)}" y="${(y + (red ? 15 : 10)).toFixed(1)}" text-anchor="middle" font-size="${red ? 44 : 28}" font-weight="700" fill="${c}">${n}</text>`;
+    const or = rr + cr + (red ? 34 : 24), ox = cx + or * Math.sin(t), oy = cy - or * Math.cos(t);
+    s += `<text x="${ox.toFixed(1)}" y="${(oy + (red ? 16 : 10)).toFixed(1)}" text-anchor="middle" font-size="${red ? 44 : 28}" font-weight="700" fill="${c === B ? B : c}">${k}</text>`;
+  });
+  const lab = (x,y,txt,c,rot,fs) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs||16}" font-weight="700" fill="${c}" stroke="#fff" stroke-width="7" paint-order="stroke" ${rot?`transform="rotate(${rot} ${x} ${y})"`:''}>${txt}</text>`;
+  s += lab(333,174,'JUG',R) + lab(333,514,'SEVER',R) + lab(178,328,'ISTOK',R) + lab(488,328,'ZAPAD',R);
+  s += lab(472,412,'DEVICA',B,30,14) + lab(186,412,'BIK',G,-60,15);
+  s += lab(108,562,'DAN',B,0,16) + lab(570,562,'NOĆ',B,0,16);
+  return `<svg viewBox="-20 -20 706 700" role="img" aria-label="Kuće – krug sa 12 kuća" style="width:100%;height:auto;display:block;font-family:Arial,Helvetica,sans-serif">${s}</svg>`;
+}
+/* ---------- ekran: karta ---------- */
+function vKarta(){
+  const o = osobe.find(x=>x.id===aktivna);
+  if (!o) return `<div class="stack"><div class="empty">Izaberite ili unesite osobu na ekranu <b>Osobe</b>.</div></div>`;
+  const k = NN.karta(o), P = k.pitagora, pg = k.piramidalnaGodina, I = k.inkarnacije;
+
+  // piramida + označena trenutna godina
+  const LAB = ['Datum','Polje života','Zdravlje i karma','Porodica i brak','Deca','Kontakti i veze','',''];
+  const hot = {}; if (pg){ /* pronađi ćelije aspekta */ let idx = 0, kk = k.godine % 28; for (let r=1;r<k.piramida.length;r++){ for (let j=0;j<k.piramida[r].length;j++){ if (idx===kk||idx===(kk+1)%28){ (hot[r]=hot[r]||[]).push(j);} idx++; } } }
+  const pyr = k.piramida.map((row,r)=>`<div class="prow p${r}"><div class="lab l">${r>=1&&r<=5?LAB[r]:''}</div><div class="cells">${cells(row, r===0?'top':(r>=6?'code':''), hot[r])}</div><div class="lab r num">${r===0?'':row.length+' br.'}</div></div>`).join('');
+
+  const sepHtml = `<div style="display:grid;gap:8px"><div class="asp-head"><b><span class="glyph g-konj">☌</span> Separacione konjukcije</b></div>
+      <div class="pairs">${k.separacione.length ? k.separacione.map(s=>`<div class="pair sep"><div class="t">${s.naziv} (${s.x} – ${s.n})</div><div class="v sepv">${s.parovi.map(q=>`<span>${q[0]}<span class="glyph g-konj">☌</span>${q[1]}</span>`).join('')}</div></div>`).join('') : '<div class="pair"><div class="t">Nema separacionih konjukcija.</div><div></div></div>'}</div></div>`;
+  const asp = Object.keys(GL).map(key => {
+    const [g, cls, naz] = GL[key];
+    return `<div class="grid" style="display:grid;gap:8px"><div class="asp-head"><b><span class="glyph ${cls}">${g}</span> ${naz}</b>${key==='inkonjukcija'?`<span class="note">${P.kod.split('').join('+')} = ${k.inkonjukcija}</span>`:''}</div>
+      <div class="pairs">${k.aspekti[key].length ? k.aspekti[key].map(a=>`<div class="pair"><div class="t">${a.naziv}</div><div class="v">${a.a==null?'<span class="muted small" style="font-weight:500">nema stepena</span>':`<span>${a.a}</span><span class="glyph ${cls}">${g}</span><span>${a.b}</span>`}</div></div>`).join('') : '<div class="pair"><div class="t">Nema osnovnih konjukcija.</div><div></div></div>'}</div></div>` + (key==='konjukcije' ? sepHtml : '');
+  }).join('');
+
+  const st = k.stepeni, stp = (n,s,nema) => `<div class="step ${s?'':'na'}"><span>${n}</span><b>${s? s.tekst : nema}</b></div>`;
+
+  let kal = '';
+  if (k.kaldeja){
+    const K = k.kaldeja;
+    const imeSl = K.kIme, prezSl = K.kPrezime;
+    const lts = imeSl.map(s=>`<div class="lt">${esc(s.slovo)}<b>${s.broj}</b></div>`).join('') + '<div class="lt gap"></div>' + prezSl.map(s=>`<div class="lt">${esc(s.slovo)}<b>${s.broj}</b></div>`).join('');
+    const ch = arr => arr.map((x,i)=>`${i?'<i>→</i>':''}<span class="${[11,22,33].includes(x)&&i===arr.length-1?'m':''}">${x}</span>`).join('');
+    kal = `<section class="card" id="s-kaldeja"><div class="asp-head"><h3>Kaldeja</h3><span class="note">Pismo: ${esc(K.pismo)}</span></div>
+      <div class="letters">${lts}</div>
+      ${K.nepoznata.length?`<p class="err small" style="margin:0">Slova kojih nema u ovoj tablici: ${esc([...new Set(K.nepoznata)].join(', '))}. Probajte drugo pismo.</p>`:''}
+      <div class="grid2">
+        <div class="step"><span>Broj karaktera (BK)</span><div class="chain" style="justify-content:flex-start;font-size:26px">${ch(K.bk)}</div></div>
+        <div class="step"><span>Pun lični izraz (PLI)</span><div class="chain" style="justify-content:flex-start;font-size:26px">${ch(K.pli)}</div></div>
+      </div>
+      ${K.piramida?`<div class="pyr kp">${K.piramida.map(r=>`<div class="prow"><div></div><div class="cells">${cells(r)}</div><div></div></div>`).join('')}</div>`:''}
+      ${K.poslednja3?`<div class="pair"><div class="t">Poslednja 3 broja piramide</div><div class="v">${K.poslednja3.join(' <span class="muted">→</span> ')}</div></div>`:''}
+    </section>`;
+  }
+
+  const cyc = k.ciklusi.map(c => {
+    const now = k.godine >= c.od && (c.do==null || k.godine <= c.do);
+    return `<div class="cyc ${now?'now':''}"><div class="rn">${['I','II','III','IV'][c.br-1]}</div><div class="yrs">${c.do==null?`od ${c.od}. godine do kraja života`:`od ${c.od}. do ${c.do}. godine`}${now?'<br><b style="color:var(--gold)">sada</b>':''}</div>
+      <div class="vi"><b>${c.v}</b><span>vrhunac</span></div><div class="vi i ${c.i===0?'zero':''}"><b>${c.i}</b><span>izazov</span></div></div>`;
+  }).join('');
+
+  const akt = k.aktivni.length ? k.aktivni.map(a=>`<div class="act"><div class="n">${a.broj}</div><div><b>Broj ${a.broj}</b>${a.jaka?' <span class="tag" style="background:var(--gold-soft);color:var(--gold)">najjača</span>':''}<div class="muted small">${a.opis}</div></div></div>`).join('') : `<div class="empty">Nema aktivnih brojeva za ${k.godine}. godinu.</div>`;
+
+  const DELOVI = [['s-kodovi','Kodovi'],['s-piramida','Piramida'],['s-stepeni','Stepeni'],['s-aspekti','Aspekti']].concat(k.kaldeja?[['s-kaldeja','Kaldeja']]:[]).concat([['s-ciklusi','Ciklusi života'],['s-aktivacije','Aktivacije'],['s-inkarnacije','Inkarnacije i matrica'],['s-kuce','Kuće']]);
+  return `<div class="jumpsel"><label for="k-idi"><span>Idi na</span><select id="k-idi">${DELOVI.map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></label></div>
+  <div class="stack" style="padding-top:4px">
+    <section class="hero" id="s-kodovi">
+      <div><div class="name">${esc(imeOsobe(o))}</div><div class="sub num">${datumOsobe(o)} · ${k.godine} god.${k.dnevno?` · ${k.dnevno.tip}`:''}</div></div>
+      <div class="codes">
+        <div class="code-box"><b>${P.kod}</b><span>Pitagorin kod</span></div>
+        <div class="code-box"><b>${k.piramidalni}</b><span>Piramidalni kod</span></div>
+        <div class="code-box uni"><b>${k.jedinstveni}</b><span>Jedinstveni kod</span></div>
+      </div>
+      <div class="trio">
+        <div><b>${P.bio}</b><span>Bioritamski</span></div>
+        <div><b>${P.gen}</b><span>Generacijski</span></div>
+        <div><b>${P.licni}</b><span>Lični broj</span></div>
+      </div>
+      <div class="muted small num">Jedinstveni: ${k.jedinstveniDetalji.map(x=>`${x.a}+${x.b}=${x.z}${x.z>9?'→'+x.r:''}`).join(' · ')}</div>
+    </section>
+
+    <section class="card" id="s-piramida">
+      <div class="asp-head"><h3>Piramida</h3>${pg?`<span class="note">${k.godine}. godina: <b style="color:var(--gold)">${pg.potpis}</b></span>`:''}</div>
+      <div class="pyr">${pyr}</div>
+      ${pg?`<div class="pair"><div class="t">Piramidalna godina (od rođendana do rođendana) · ${pg.polje}${pg.krug>1?` · ${pg.krug}. krug`:''}</div><div class="v">${pg.aspekt}${pg.krak!=null?` <span class="muted small">krak</span> ${pg.krak}`:''}</div></div>`:''}
+    </section>
+
+    <section class="card" id="s-stepeni">
+      <h3>Stepeni</h3>
+      <div class="steps">${stp('Stepen dana', st.dan, 'Nema stepena')}${stp('Stepen meseca', st.mesec, '')}${stp('Stepen sata', st.sat, o.sat===''||o.sat==null?'Vreme nije upisano':'Nema stepena')}${stp('Stepen minuta', st.minut, o.sat===''||o.sat==null?'Vreme nije upisano':'Nema stepena')}</div>
+      ${k.dnevno?`<div class="daynight"><span class="muted small">Vreme rođenja</span><b>${k.dnevno.tip}</b></div>`:`<div class="daynight"><span class="muted small">Vreme rođenja</span><b>nije upisano</b></div>`}
+    </section>
+
+    <section class="card" id="s-aspekti"><h3>Aspekti</h3>${asp}</section>
+    ${kal}
+    <section class="card" id="s-ciklusi"><h3>Ciklusi života</h3><div class="cycles">${cyc}</div></section>
+    <section class="card" id="s-aktivacije"><div class="asp-head"><h3>Aktivacije brojeva</h3><span class="note">${k.godine}. godina</span></div>${akt}</section>
+    <section class="card" id="s-inkarnacije">
+      <h3>Inkarnacije i matrica</h3>
+      <div class="inkrow date">${I.datum.slice(0,2)}.${I.datum.slice(2,4)}.${I.datum.slice(4)}</div>
+      <div class="inkrow extra">${I.dodatni.map(x=>`<span>${x}</span>`).join('')}</div>
+      <div class="pair"><div class="t">Inkarnacija</div><div class="v">${I.gore} + ${I.dole} = <span style="color:var(--gold);font-size:22px">${I.inkarnacija}</span></div></div>
+      <div class="matrix">${[1,4,7,2,5,8,3,6,9].map(n=>I.polja[n]?`<div>${String(n).repeat(I.polja[n])}</div>`:'<div class="prazno">/</div>').join('')}</div>
+    </section>
+    <section class="card" id="s-kuce"><h3>Kuće</h3><div class="kuce">${kuceSVG(k.kuce.asc)}</div>${k.kuce.asc?`<div class="pair"><div class="t">Ascendent u ${k.godine}. godini (od ${pad2(o.dan)}.${pad2(o.mesec)}.${o.godina + k.godine}. do rođendana ${o.godina + k.godine + 1}.)</div><div class="v">${k.kuce.asc}. kuća · <span style="color:var(--gold)">${k.kuce.broj}${NN.KUCE_ZNAK[k.kuce.asc]?' '+NN.KUCE_ZNAK[k.kuce.asc]:''}</span> · ${k.kuce.strana}</div></div>`:''}
+      ${k.dnevno ? `<div class="pair"><div class="t">Rođenje</div><div class="v">${k.dnevno.tip}</div></div>` : `<p class="muted small" style="margin:0">Vreme rođenja nije upisano, pa se ne zna da li se gleda osa preko puta.</p>`}
+      <div class="legend-d"><span><i class="plus"></i>sedište, egzaltacija</span><span><i class="minus"></i>izgon, pad</span></div>
+      <div class="houses">${[1,2,3,4,5,6,7,8,9,10,11,12].map(lk => { const asc = k.kuce.asc || 1, kn = ((asc - 1 + lk - 1) % 12) + 1;
+        const strana = NN.stranaKuce(kn), rod = k.dnevno ? k.dnevno.tip : null;
+        const osa = rod && strana !== 'DAN i NOĆ' && strana !== rod; // kuća pripada drugoj strani → gleda se kuća preko puta
+        const ke = osa ? ((kn - 1 + 6) % 12) + 1 : kn;
+        const n = NN.KUCE[ke], A = NN.aspektiZaBroj(k, n), chips = (arr, lab) => arr.length ? `<div class="hsrc"><span>${lab}</span>${arr.map(x=>{ const D = NN.dostojanstvo(x, rod); return `<b class="${D.boja||''}" ${D.vrste.length?`title="${D.vrste.join(', ').replace('sediste','sedište')}"`:''}>${x}</b>`; }).join('')}</div>` : '';
+        const sve = chips(A.piramida,'piramida') + chips(A.datum,'datum') + chips(A.kodovi,'kodovi');
+        const znak = kk => NN.KUCE_ZNAK[kk] ? ' ('+NN.KUCE_ZNAK[kk]+')' : '';
+        return `<details class="house ${lk===1?'asc':''}"><summary class="hh"><span>${lk}. kuća${lk===1?' <em>ASC</em>':''}</span><span class="muted small" style="font-weight:500">→ pada na ${kn}. kuću · ${strana}</span></summary>
+          <div class="hbody">${osa ? `<div class="osa">${kn}. kuća${znak(kn)} pripada ${strana==='DAN'?'dnevnom':'noćnom'} rođenju → gleda se osa preko puta: <b>${ke}. kuća, aspekti sa ${n}</b>${znak(ke)}</div>` : `<div class="muted small">aspekti sa ${n}${znak(kn)}</div>`}
+          ${sve || '<div class="muted small">nema aspekata sa '+n+'</div>'}</div></details>`; }).join('')}</div>
+    </section>
+    <div class="row akcije">
+      <button class="btn ghost sm" id="k-uredi">Izmeni</button>
+      ${brisi===o.id?`<div class="confirm"><span>Obrisati ${esc(imeOsobe(o))}?</span><button class="btn sm" id="k-da">Obriši</button><button class="btn ghost sm" id="k-ne">Ne</button></div>`:'<button class="btn ghost sm" id="k-brisi">Obriši</button>'}
+      ${jeInstalirana() ? '' : '<button class="btn sm inst" id="instBtn" type="button">📲 Dodaj na početni ekran</button>'}
+    </div>
+    <div id="instHelp" class="card small" hidden></div>
+  </div>`;
+}
+function jeInstalirana(){ try { return window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone; } catch(e){ return false; } }
+function bindKarta(){
+  if ($('#instBtn')) $('#instBtn').onclick = async () => {
+  if (instEvt) { instEvt.prompt(); try { await instEvt.userChoice; } catch(e){} instEvt = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), box = $('#instHelp');
+  box.innerHTML = ios
+    ? '<b>iPhone / iPad (Safari)</b><div>1. Dodirnite dugme <b>Deli</b> (kvadrat sa strelicom ⬆︎) na dnu ekrana.</div><div>2. Izaberite <b>„Dodaj na početni ekran"</b>.</div><div>3. Dodirnite <b>„Dodaj"</b>.</div>'
+    : '<b>Android (Chrome)</b><div>1. Dodirnite <b>⋮</b> (tri tačke) gore desno.</div><div>2. Izaberite <b>„Instaliraj aplikaciju"</b> ili <b>„Dodaj na početni ekran"</b>.</div><div>3. Potvrdite sa <b>„Instaliraj"</b>.</div>';
+  box.hidden = !box.hidden;
+};
+  const sel = $('#k-idi'); if (sel) sel.onchange = () => { const el = document.getElementById(sel.value); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 120; window.scrollTo({ top: y, behavior: 'smooth' }); } };
+  const u = $('#k-uredi'); if (u) u.onclick = () => { uredi = aktivna; formK = null; idi('osobe'); };
+  const b = $('#k-brisi'); if (b) b.onclick = () => { brisi = aktivna; render(); };
+  const n = $('#k-ne'); if (n) n.onclick = () => { brisi = null; render(); };
+  const d = $('#k-da'); if (d) d.onclick = () => { osobe = osobe.filter(x=>x.id!==aktivna); brisi = null; aktivna = osobe[0]?osobe[0].id:null; save(); idi('osobe'); };
+}
+
+/* ---------- ekran: sinastrija ---------- */
+function vSin(){
+  if (osobe.length < 2) return `<div class="stack"><div class="empty">Za sinastriju su potrebne bar dve sačuvane osobe.</div></div>`;
+  if (!osobe.find(x=>x.id===synA)) synA = osobe[0].id;
+  if (!osobe.find(x=>x.id===synB) || synB===synA) synB = (osobe.find(x=>x.id!==synA)||{}).id;
+  const opt = sel => osobe.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(imeOsobe(p))}</option>`).join('');
+  const A = NN.karta(osobe.find(x=>x.id===synA)), B = NN.karta(osobe.find(x=>x.id===synB)), S = NN.sinastrija(A,B), V = S.vertikale;
+  const red = (k, a, b, r) => `<div class="k">${k}</div><div class="num"><span class="add">${a} + ${b}</span> = <span class="res">${r}</span></div>`;
+  return `<div class="stack">
+    <section class="card">
+      <h2>Uporedni horoskop</h2>
+      <div class="syn-pick">
+        <label for="s-a">Prva osoba<select id="s-a">${opt(synA)}</select></label>
+        <div class="x">+</div>
+        <label for="s-b">Druga osoba<select id="s-b">${opt(synB)}</select></label>
+      </div>
+    </section>
+    <section class="hero">
+      <div class="sub">Zajednički kod veze</div>
+      <div class="chain" style="font-size:44px;letter-spacing:.14em">${S.kod}</div>
+      <div class="muted small num">${A.pitagora.kod} + ${B.pitagora.kod} · opozicija ${S.opozicija}</div>
+    </section>
+    <section class="card">
+      <h3>Vertikale</h3>
+      <div class="vert">
+        <div><span>Bioritamska</span><div class="eq">${V.bioritam.a} + ${V.bioritam.b}</div><b>${V.bioritam.z}</b></div>
+        <div><span>Generacijska</span><div class="eq">${V.generacijski.a} + ${V.generacijski.b}</div><b>${V.generacijski.z}</b></div>
+        <div class="main"><span>Lična</span><div class="eq">${V.licni.a} + ${V.licni.b}</div><b>${V.licni.z}</b></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Zbir polja piramide</h3>
+      <div class="sum">
+        ${red('3. polje – brak i porodica', A.polja.porodica, B.polja.porodica, S.polja.porodica)}
+        ${red('4. polje – deca', A.polja.deca, B.polja.deca, S.polja.deca)}
+        ${red('5. polje – veza, kontakti', A.polja.kontakti, B.polja.kontakti, S.polja.kontakti)}
+        ${red('Piramidalni kodovi', A.piramidalni, B.piramidalni, S.piramidalni)}
+        ${red('Jedinstveni kodovi', A.jedinstveni, B.jedinstveni, S.jedinstveni)}
+      </div>
+    </section>
+  </div>`;
+}
+function bindSin(){
+  const a = $('#s-a'), b = $('#s-b');
+  if (a) a.onchange = () => { synA = a.value; if (synB===synA) synB = null; render(); };
+  if (b) b.onchange = () => { synB = b.value; if (synB===synA) synA = null; render(); };
+}
+
+/* ---------- navigacija ---------- */
+function render(){
+  const v = $('#view');
+  if (ekran==='osobe'){ v.innerHTML = vOsobe(); bindOsobe(); }
+  else if (ekran==='karta'){ v.innerHTML = vKarta(); bindKarta(); }
+  else { v.innerHTML = vSin(); bindSin(); }
+  document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.go===ekran ? 'page' : 'false'));
+  const o = osobe.find(x=>x.id===aktivna);
+  $('#who').textContent = ekran==='karta' && o ? imeOsobe(o) : '';
+}
+function idi(e){ if (e !== 'osobe') formK = null; ekran = e; brisi = null; render(); window.scrollTo(0,0); }
+document.querySelectorAll('.nav button').forEach(b => b.onclick = () => idi(b.dataset.go));
+/* dodavanje na početni ekran */
+let instEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instEvt = e; });
+window.addEventListener('appinstalled', () => { const i = $('#instBtn'); if (i) i.remove(); });
+try { document.getElementById('yr').textContent = new Date().getFullYear(); } catch(e){}
+ekran = 'karta';
+render();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+</script>
+</body>
+</html>
