@@ -102,20 +102,19 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
 .trio i{font-style:normal;font-size:12px;color:var(--violet)}
 
 /* piramida */
-.pyr{display:grid;gap:4px;overflow-x:auto;padding-bottom:4px}
-.prow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-.prow .cells{display:flex;gap:4px;justify-content:center}
+.pyr{display:grid;gap:var(--g,4px);justify-items:center;padding-bottom:4px;--g:4px}
+.prow{display:flex;justify-content:center}
+.prow .cells{display:flex;gap:var(--g,4px);justify-content:center}
+.pyr .cell{width:var(--cw);height:calc(var(--cw) * 1.05);font-size:calc(var(--cw) * .52);border-radius:calc(var(--cw) * .25)}
+.pyr .cell.dat{background:transparent;border:1px solid #d9b25f66;color:var(--gold);font-weight:800;font-size:calc(var(--cw) * .58)}
 .prow .lab{font-size:11px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
 .prow .lab.r{text-align:left}
 .prow .lab.l{text-align:right}
 .cell{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:600;font-variant-numeric:tabular-nums;background:var(--panel-2);border:1px solid var(--line);font-size:15px}
-.cell.top{background:transparent;border:0;color:var(--muted);height:22px;font-size:13px;font-weight:500}
 .cell.hot{background:var(--gold);color:#1a1220;border-color:var(--gold)}
 .cell.code{border-color:var(--gold);color:var(--gold)}
 .p1 .cell:not(.hot){background:#2d2238}.p2 .cell:not(.hot){background:#30233a}.p3 .cell:not(.hot){background:#33243c}.p4 .cell:not(.hot){background:#35253f}.p5 .cell:not(.hot){background:#382642}
-@media (max-width:400px){.cell{width:26px;height:28px;font-size:14px;border-radius:7px}.prow .lab{font-size:10px}}
-.kp .cell{width:24px;height:26px;font-size:13px;border-radius:6px}
-@media (max-width:400px){.kp .cell{width:20px;height:24px;font-size:12px}}
+
 
 /* parovi / aspekti */
 .pairs{display:grid;gap:8px}
@@ -182,8 +181,8 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
 
 /* donja navigacija */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#140d18f2;backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
-.nav button{background:none;border:0;padding:10px 4px 12px;display:grid;justify-items:center;gap:3px;color:var(--muted);font-size:12px;cursor:pointer}
+.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{background:none;border:0;padding:10px 4px 12px;line-height:1.15;text-align:center;display:grid;justify-items:center;gap:3px;color:var(--muted);font-size:12px;cursor:pointer}
 .nav button svg{width:22px;height:22px}
 .nav button[aria-current="page"]{color:var(--gold)}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
@@ -224,6 +223,12 @@ details[open]>summary.hh::after{transform:rotate(180deg)}
 .akcije{flex-wrap:nowrap;gap:6px;align-items:center}
 .akcije .btn{padding:8px 10px;font-size:13px;white-space:nowrap}
 .btn.inst{margin-left:auto;font-size:13px;padding:8px 12px;white-space:nowrap;background:#f5c518;color:#1a1220;box-shadow:0 0 0 3px #f5c51840,0 6px 18px #f5c51833;font-weight:800}
+.prow-o{display:flex;gap:6px;align-items:stretch}
+.prow-o .person{flex:1;min-width:0}
+.trash{flex-shrink:0;width:46px;border-radius:12px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.trash:hover{color:var(--bad);border-color:var(--bad)}
+.trash svg{width:20px;height:20px}
+.person.del{gap:8px;cursor:default;border-color:var(--bad)}
 .foot{font-size:12px;color:var(--muted);text-align:center;padding-top:8px}
 .tiles{display:grid;gap:8px}
 .tline{display:flex;flex-wrap:wrap;align-items:center;gap:3px}
@@ -254,6 +259,7 @@ details[open]>summary.hh::after{transform:rotate(180deg)}
   <div class="nav-in">
     <button data-go="osobe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Osobe</button>
     <button data-go="karta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 21 20H3Z"/><path d="M7.5 15h9M9.7 11h4.6"/></svg>Karta</button>
+    <button data-go="kaldeja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="5" height="6" rx="1"/><rect x="9.5" y="5" width="5" height="6" rx="1"/><rect x="16" y="5" width="5" height="6" rx="1"/><path d="M5 15h14M8 19h8"/></svg>Kaldeja naziva</button>
     <button data-go="sinastrija"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>Sinastrija</button>
   </div>
 </nav>
@@ -619,6 +625,14 @@ details[open]>summary.hh::after{transform:rotate(180deg)}
     return { boja: minus ? 'minus' : plus ? 'plus' : null, vrste };
   }
 
+  // ---------- Kaldeja samo za naziv (bez datuma) ----------
+  function kaldejaNaziv(kockice, pismo) {
+    const s = izKockica(kockice, pismo), bk = s.niz.reduce((a, b) => a + b.broj, 0);
+    const kp = s.niz.length > 1 ? pyramid(s.niz.map(x => x.broj).join('')) : null;
+    const posl = kp && kp.length >= 3 ? [kp[kp.length - 3].join(''), kp[kp.length - 2].join(''), kp[kp.length - 1].join('')] : null;
+    return { pismo, slova: s.niz, nepoznata: s.nepoznata, bk: s.niz.length ? chainMaster(bk) : null, piramida: kp, poslednja3: posl };
+  }
+
   // ---------- sinastrija ----------
   function sinastrija(A, B) {
     const kod = addCodes(A.pitagora.kod, B.pitagora.kod);
@@ -640,7 +654,7 @@ details[open]>summary.hh::after{transform:rotate(180deg)}
     };
   }
 
-  const api = { dostojanstvo, aspektiZaBroj, KUCE, KUCE_ZNAK, stranaKuce, kuce, inkarnacije, izKockica, uKockice, mozeSpojiti, red, pyramid, stepen, danNoc, karta, sinastrija, slova, chainMaster, addCodes, PISMA: Object.keys(PISMA), VLADAVINA, ZNACI };
+  const api = { kaldejaNaziv, dostojanstvo, aspektiZaBroj, KUCE, KUCE_ZNAK, stranaKuce, kuce, inkarnacije, izKockica, uKockice, mozeSpojiti, red, pyramid, stepen, danNoc, karta, sinastrija, slova, chainMaster, addCodes, PISMA: Object.keys(PISMA), VLADAVINA, ZNACI };
   if (typeof module !== 'undefined') module.exports = api; else root.NN = api;
 })(this);
 
@@ -662,7 +676,9 @@ function load(){ try { const r = localStorage.getItem(KEY); if (r) return JSON.p
 let osobe = load();
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(osobe)); } catch(e){} }
 
-let formK = null;
+let formK = null, brisiL = null;
+/* veličina kockice piramide prema širini ekrana i broju cifara u prvom redu */
+const cwStyle = n => `--cw:min(32px, calc((min(100vw, 560px) - 68px - ${Math.max(n-1,0)} * var(--g)) / ${Math.max(n,1)}));`;
 let ekran = 'osobe', aktivna = osobe[0] ? osobe[0].id : null, uredi = null, brisi = null;
 let synA = osobe[0] ? osobe[0].id : null, synB = osobe[1] ? osobe[1].id : null;
 
@@ -680,10 +696,12 @@ function vOsobe(){
   if (!formK) formK = { ime: Array.isArray(f.kIme) ? f.kIme.slice() : NN.uKockice(f.ime, f.pismo), prezime: Array.isArray(f.kPrezime) ? f.kPrezime.slice() : NN.uKockice(f.prezime, f.pismo) };
   const lista = osobe.length ? osobe.map(p => {
     const k = NN.karta(p);
-    return `<button class="person" data-open="${p.id}">
+    if (brisiL === p.id) return `<div class="person del"><div class="meta"><b>Obrisati ${esc(imeOsobe(p))}?</b></div><button class="btn sm" type="button" data-da="${p.id}">Obriši</button><button class="btn ghost sm" type="button" data-ne="1">Ne</button></div>`;
+    return `<div class="prow-o"><button class="person" data-open="${p.id}">
       <div class="av">${esc((p.ime||'?')[0]||'?')}</div>
       <div class="meta"><b>${esc(imeOsobe(p))}</b><span class="muted small">${datumOsobe(p)}</span> ${p.primer?'<span class="tag">primer</span>':''}</div>
-      <div class="code num" aria-label="Pitagorin kod">${k.pitagora.kod}</div></button>`;
+      <div class="code num" aria-label="Pitagorin kod">${k.pitagora.kod}</div></button>
+      <button class="trash" type="button" data-kanta="${p.id}" aria-label="Obriši ${esc(imeOsobe(p))}" title="Obriši"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`;
   }).join('') : `<div class="empty">Još nema sačuvanih osoba. Unesite prvu osobu iznad.</div>`;
   return `<div class="stack">
   <form class="card" id="forma" novalidate>
@@ -717,6 +735,9 @@ function vOsobe(){
   </div>`;
 }
 function bindOsobe(){
+  document.querySelectorAll('[data-kanta]').forEach(b => b.onclick = () => { brisiL = b.dataset.kanta; render(); });
+  document.querySelectorAll('[data-ne]').forEach(b => b.onclick = () => { brisiL = null; render(); });
+  document.querySelectorAll('[data-da]').forEach(b => b.onclick = () => { const id = b.dataset.da; osobe = osobe.filter(x => x.id !== id); if (aktivna === id) aktivna = osobe[0] ? osobe[0].id : null; if (uredi === id) { uredi = null; formK = null; } brisiL = null; save(); render(); });
   $('#forma').addEventListener('submit', e => {
     e.preventDefault();
     const v = id => $('#'+id).value.trim();
@@ -799,7 +820,7 @@ function vKarta(){
   // piramida + označena trenutna godina
   const LAB = ['Datum','Polje života','Zdravlje i karma','Porodica i brak','Deca','Kontakti i veze','',''];
   const hot = {}; if (pg){ /* pronađi ćelije aspekta */ let idx = 0, kk = k.godine % 28; for (let r=1;r<k.piramida.length;r++){ for (let j=0;j<k.piramida[r].length;j++){ if (idx===kk||idx===(kk+1)%28){ (hot[r]=hot[r]||[]).push(j);} idx++; } } }
-  const pyr = k.piramida.map((row,r)=>`<div class="prow p${r}"><div class="lab l">${r>=1&&r<=5?LAB[r]:''}</div><div class="cells">${cells(row, r===0?'top':(r>=6?'code':''), hot[r])}</div><div class="lab r num">${r===0?'':row.length+' br.'}</div></div>`).join('');
+  const pyr = k.piramida.map((row,r)=>`<div class="prow p${r}"><div class="cells">${cells(row, r===0?'dat':(r>=6?'code':''), hot[r])}</div></div>`).join('');
 
   const sepHtml = `<div style="display:grid;gap:8px"><div class="asp-head"><b><span class="glyph g-konj">☌</span> Separacione konjukcije</b></div>
       <div class="pairs">${k.separacione.length ? k.separacione.map(s=>`<div class="pair sep"><div class="t">${s.naziv} (${s.x} – ${s.n})</div><div class="v sepv">${s.parovi.map(q=>`<span>${q[0]}<span class="glyph g-konj">☌</span>${q[1]}</span>`).join('')}</div></div>`).join('') : '<div class="pair"><div class="t">Nema separacionih konjukcija.</div><div></div></div>'}</div></div>`;
@@ -824,7 +845,7 @@ function vKarta(){
         <div class="step"><span>Broj karaktera (BK)</span><div class="chain" style="justify-content:flex-start;font-size:26px">${ch(K.bk)}</div></div>
         <div class="step"><span>Pun lični izraz (PLI)</span><div class="chain" style="justify-content:flex-start;font-size:26px">${ch(K.pli)}</div></div>
       </div>
-      ${K.piramida?`<div class="pyr kp">${K.piramida.map(r=>`<div class="prow"><div></div><div class="cells">${cells(r)}</div><div></div></div>`).join('')}</div>`:''}
+      ${K.piramida?`<div class="pyr kp" style="--g:2px;${cwStyle(K.piramida[0].length)}">${K.piramida.map(r=>`<div class="prow"><div class="cells">${cells(r)}</div></div>`).join('')}</div>`:''}
       ${K.poslednja3?`<div class="pair"><div class="t">Poslednja 3 broja piramide</div><div class="v">${K.poslednja3.join(' <span class="muted">→</span> ')}</div></div>`:''}
     </section>`;
   }
@@ -857,7 +878,7 @@ function vKarta(){
 
     <section class="card" id="s-piramida">
       <div class="asp-head"><h3>Piramida</h3>${pg?`<span class="note">${k.godine}. godina: <b style="color:var(--gold)">${pg.potpis}</b></span>`:''}</div>
-      <div class="pyr">${pyr}</div>
+      <div class="pyr" style="${cwStyle(8)}">${pyr}</div>
       ${pg?`<div class="pair"><div class="t">Piramidalna godina (od rođendana do rođendana) · ${pg.polje}${pg.krug>1?` · ${pg.krug}. krug`:''}</div><div class="v">${pg.aspekt}${pg.krak!=null?` <span class="muted small">krak</span> ${pg.krak}`:''}</div></div>`:''}
     </section>
 
@@ -917,6 +938,53 @@ function bindKarta(){
   const d = $('#k-da'); if (d) d.onclick = () => { osobe = osobe.filter(x=>x.id!==aktivna); brisi = null; aktivna = osobe[0]?osobe[0].id:null; save(); idi('osobe'); };
 }
 
+/* ---------- ekran: Kaldeja (samo naziv) ---------- */
+let kalTekst = '', kalPismo = 'Svetska', kalK = [];
+function vKal(){
+  return `<div class="stack">
+    <section class="card">
+      <h2>Kaldeja naziva</h2>
+      <label for="kal-tekst">Naziv brenda, firme, proizvoda…<input id="kal-tekst" autocomplete="off" placeholder="npr. Nan Numero" value="${esc(kalTekst)}"></label>
+      <label for="kal-pismo">Tablica<select id="kal-pismo">${NN.PISMA.map(p=>`<option ${p===kalPismo?'selected':''}>${p}</option>`).join('')}</select></label>
+      <div class="tiles" id="kal-tiles"></div>
+    </section>
+    <div id="kal-rez"></div>
+  </div>`;
+}
+function kalRezultat(){
+  const box = $('#kal-rez'); if (!box) return;
+  const K = NN.kaldejaNaziv(kalK, kalPismo);
+  if (!K.slova.length){ box.innerHTML = `<div class="empty">Upišite naziv brenda ili firme iznad i piramida se pojavljuje odmah.</div>`; return; }
+  const ch = arr => arr.map((x,i)=>`${i?'<i>→</i>':''}<span class="${[11,22,33].includes(x)&&i===arr.length-1?'m':''}">${x}</span>`).join('');
+  box.innerHTML = `<section class="card">
+      <div class="asp-head"><h3>Rezultat</h3><span class="note">Tablica: ${esc(kalPismo)}</span></div>
+      ${K.nepoznata.length?`<p class="err small" style="margin:0">Slova kojih nema u ovoj tablici: ${esc([...new Set(K.nepoznata)].join(', '))}. Probajte drugu tablicu.</p>`:''}
+      <div class="step"><span>Broj karaktera (BK)</span><div class="chain" style="justify-content:flex-start;font-size:30px">${ch(K.bk)}</div></div>
+      ${K.piramida?`<div class="pyr kp" style="--g:2px;${cwStyle(K.piramida[0].length)}">${K.piramida.map(r=>`<div class="prow"><div class="cells">${cells(r)}</div></div>`).join('')}</div>`:''}
+      ${K.poslednja3?`<div class="pair"><div class="t">Poslednja 3 broja piramide</div><div class="v">${K.poslednja3.join(' <span class="muted">→</span> ')}</div></div>`:''}
+    </section>`;
+}
+function kalKockice(){
+  const box = $('#kal-tiles'); if (!box) return;
+  if (!kalK.length){ box.innerHTML = ''; kalRezultat(); return; }
+  let html = '';
+  kalK.forEach((x,i) => {
+    const br = (NN.izKockica([x], kalPismo).niz[0]||{}).broj;
+    html += `<button type="button" class="tile ${x.length>1?'dig':''}" data-i="${i}" ${x.length>1?'title="Podeli na dva slova"':''}>${esc(x.toUpperCase())}<small>${br??'?'}</small></button>`;
+    if (i < kalK.length-1 && NN.mozeSpojiti(x, kalK[i+1], kalPismo)) html += `<button type="button" class="join" data-j="${i}" aria-label="Spoji u jedno slovo" title="Spoji u jedno slovo">+</button>`;
+  });
+  box.innerHTML = `<div class="tline"><span class="lbl">Kockice · ${kalK.length} slova</span>${html}</div>`;
+  box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const i=+b.dataset.i, x=kalK[i]; if (x.length>1){ kalK.splice(i,1,...x.split('')); kalKockice(); } });
+  box.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { const i=+b.dataset.j; kalK.splice(i,2,kalK[i]+kalK[i+1]); kalKockice(); });
+  kalRezultat();
+}
+function bindKal(){
+  if (!kalK.length && kalTekst) kalK = NN.uKockice(kalTekst, kalPismo);
+  $('#kal-tekst').addEventListener('input', e => { kalTekst = e.target.value; kalK = NN.uKockice(kalTekst, kalPismo); kalKockice(); });
+  $('#kal-pismo').addEventListener('change', e => { kalPismo = e.target.value; kalK = NN.uKockice(kalTekst, kalPismo); kalKockice(); });
+  kalKockice();
+}
+
 /* ---------- ekran: sinastrija ---------- */
 function vSin(){
   if (osobe.length < 2) return `<div class="stack"><div class="empty">Za sinastriju su potrebne bar dve sačuvane osobe.</div></div>`;
@@ -954,7 +1022,6 @@ function vSin(){
         ${red('4. polje – deca', A.polja.deca, B.polja.deca, S.polja.deca)}
         ${red('5. polje – veza, kontakti', A.polja.kontakti, B.polja.kontakti, S.polja.kontakti)}
         ${red('Piramidalni kodovi', A.piramidalni, B.piramidalni, S.piramidalni)}
-        ${red('Jedinstveni kodovi', A.jedinstveni, B.jedinstveni, S.jedinstveni)}
       </div>
     </section>
   </div>`;
@@ -970,12 +1037,13 @@ function render(){
   const v = $('#view');
   if (ekran==='osobe'){ v.innerHTML = vOsobe(); bindOsobe(); }
   else if (ekran==='karta'){ v.innerHTML = vKarta(); bindKarta(); }
+  else if (ekran==='kaldeja'){ v.innerHTML = vKal(); bindKal(); }
   else { v.innerHTML = vSin(); bindSin(); }
   document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.go===ekran ? 'page' : 'false'));
   const o = osobe.find(x=>x.id===aktivna);
   $('#who').textContent = ekran==='karta' && o ? imeOsobe(o) : '';
 }
-function idi(e){ if (e !== 'osobe') formK = null; ekran = e; brisi = null; render(); window.scrollTo(0,0); }
+function idi(e){ if (e !== 'osobe') formK = null; ekran = e; brisi = null; brisiL = null; render(); window.scrollTo(0,0); }
 document.querySelectorAll('.nav button').forEach(b => b.onclick = () => idi(b.dataset.go));
 /* dodavanje na početni ekran */
 let instEvt = null;
