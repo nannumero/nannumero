@@ -199,7 +199,7 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
 .inkrow{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:20px;letter-spacing:.06em;font-variant-numeric:tabular-nums}
 .inkrow.date{color:var(--ink)}
 .inkrow.extra{color:var(--gold)}
-.kuce{background:#fff;border-radius:12px;padding:10px}
+.kuce{background:transparent;border-radius:12px;padding:4px 0}
 .houses{display:grid;gap:8px}
 .house{padding:10px 12px;border-radius:10px;background:var(--panel-2);display:grid;gap:6px;border:1px solid transparent}
 .house.asc{border-color:var(--gold)}
@@ -790,7 +790,7 @@ function bindOsobe(){
 
 /* ---------- Kuće (krug sa 12 kuća) ---------- */
 function kuceSVG(asc){
-  const cx = 333, cy = 340, R = '#e8262a', G = '#3bbf1f', B = '#111';
+  const cx = 333, cy = 340, R = '#ff4040', G = '#4cd12c', B = '#ffffff', BG = '#211828';
   // [ugao od vrha u stepenima, boja, broj u krugu, broj kuće spolja]
   const K = [[0,R,4,10],[30,B,3,9],[62,G,0,8],[90,R,6,7],[120,B,5,6],[150,G,1,5],[180,R,2,4],[210,B,5,3],[242,G,6,2],[270,R,8,1],[298,B,9,12],[330,G,7,11]];
   let s = '';
@@ -800,12 +800,12 @@ function kuceSVG(asc){
     if (k === asc) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${cr + 12}" fill="#f5c84c" opacity=".55"/>`;
     const lx = cx + (rr - cr) * Math.sin(t), ly = cy - (rr - cr) * Math.cos(t);
     s += `<line x1="${cx}" y1="${cy}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${c}" stroke-width="3"/>`;
-    s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${cr}" fill="#fff" stroke="${c}" stroke-width="3"/>`;
+    s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${cr}" fill="${BG}" stroke="${c}" stroke-width="3"/>`;
     s += `<text x="${x.toFixed(1)}" y="${(y + (red ? 15 : 10)).toFixed(1)}" text-anchor="middle" font-size="${red ? 44 : 28}" font-weight="700" fill="${c}">${n}</text>`;
     const or = rr + cr + (red ? 34 : 24), ox = cx + or * Math.sin(t), oy = cy - or * Math.cos(t);
     s += `<text x="${ox.toFixed(1)}" y="${(oy + (red ? 16 : 10)).toFixed(1)}" text-anchor="middle" font-size="${red ? 44 : 28}" font-weight="700" fill="${c === B ? B : c}">${k}</text>`;
   });
-  const lab = (x,y,txt,c,rot,fs) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs||16}" font-weight="700" fill="${c}" stroke="#fff" stroke-width="7" paint-order="stroke" ${rot?`transform="rotate(${rot} ${x} ${y})"`:''}>${txt}</text>`;
+  const lab = (x,y,txt,c,rot,fs) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs||16}" font-weight="700" fill="${c}" stroke="${BG}" stroke-width="7" paint-order="stroke" ${rot?`transform="rotate(${rot} ${x} ${y})"`:''}>${txt}</text>`;
   s += lab(333,174,'JUG',R) + lab(333,514,'SEVER',R) + lab(178,328,'ISTOK',R) + lab(488,328,'ZAPAD',R);
   s += lab(472,412,'DEVICA',B,30,14) + lab(186,412,'BIK',G,-60,15);
   s += lab(108,562,'DAN',B,0,16) + lab(570,562,'NOĆ',B,0,16);

@@ -1,5 +1,5 @@
 // Nan Numero: omogućava dodavanje na početni ekran i rad bez interneta
-const C = 'nannumero-v4';
+const C = 'nannumero-v5';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'logo-mali.png']).catch(() => {}))); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
