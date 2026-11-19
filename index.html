@@ -389,20 +389,22 @@ details[open]>summary.hh::after{transform:rotate(180deg)}
       if (/[\s\-'.,]/.test(c)) { i++; continue; }
       const two = s.substr(i, 2);
       if (two.length === 2 && tab[two] != null) { out.push({ slovo: two, broj: tab[two] }); i += 2; continue; }
-      if (tab[c] != null) out.push({ slovo: c, broj: tab[c] }); else nepoznata.push(c);
+      if (vr(tab, c) != null) out.push({ slovo: c, broj: vr(tab, c) }); else nepoznata.push(c);
       i++;
     }
     return { niz: out, nepoznata };
   }
 
   // kockice: svaka kockica je tačno jedno slovo (npr. 'NJ' ili 'N' i 'J' odvojeno)
+  // vrednost kockice: slovo iz tablice, a cifra (0–9) vredi koliko i sama (cocacola234 → slova + 2 + 3 + 4)
+  const vr = (tab, x) => tab[x] != null ? tab[x] : (/^[0-9]$/.test(x) ? Number(x) : null);
   function izKockica(kockice, pismo) {
     const tab = PISMA[pismo] || PISMA.Svetska, out = [], nepoznata = [];
     (kockice || []).forEach(k => {
       let s = String(k).toUpperCase();
       if (pismo !== 'Rusija') s = s.split('').map(c => MK_KEEP[c] || CYR[c] || c).join('');
-      if (tab[s] != null) out.push({ slovo: s, broj: tab[s] });
-      else if (s.length > 1 && s.split('').every(c => tab[c] != null)) s.split('').forEach(c => out.push({ slovo: c, broj: tab[c] }));
+      if (vr(tab, s) != null) out.push({ slovo: s, broj: vr(tab, s) });
+      else if (s.length > 1 && s.split('').every(c => vr(tab, c) != null)) s.split('').forEach(c => out.push({ slovo: c, broj: vr(tab, c) }));
       else nepoznata.push(s);
     });
     return { niz: out, nepoznata };
